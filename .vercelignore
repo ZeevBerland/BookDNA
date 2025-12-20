@@ -1,0 +1,12 @@
+supabase/functions
+test_*.py
+test_*.ts
+test_*.js
+data/
+*.csv
+*.npy
+venv/
+venv_gpu/
+__pycache__/
+.cursor/
+

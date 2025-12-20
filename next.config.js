@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['books.google.com'],
     remotePatterns: [
       {
         protocol: 'http',
@@ -12,6 +11,16 @@ const nextConfig = {
         hostname: 'books.google.com',
       },
     ],
+  },
+  // Exclude Supabase Edge Functions from build
+  webpack: (config, { isServer }) => {
+    if (!isServer) {
+      config.resolve.alias = {
+        ...config.resolve.alias,
+        'supabase/functions': false,
+      };
+    }
+    return config;
   },
 }
 
