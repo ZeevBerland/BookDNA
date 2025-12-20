@@ -49,7 +49,7 @@ export default function SearchBar({ onSearch, isLoading = false }: SearchBarProp
           onFocus={() => setShowExamples(true)}
           onBlur={() => setTimeout(() => setShowExamples(false), 200)}
           placeholder="Describe the book you're looking for..."
-          className="w-full px-6 py-4 pr-14 rounded-2xl bg-white border-2 border-brown-medium/20 focus:border-copper focus:outline-none transition-all resize-none shadow-soft text-lg"
+          className="w-full px-4 sm:px-6 py-4 pr-12 sm:pr-14 rounded-2xl bg-white border-2 border-brown-medium/20 focus:border-copper focus:outline-none transition-all resize-none shadow-soft text-base sm:text-lg"
           rows={2}
           disabled={isLoading}
         />
@@ -57,13 +57,13 @@ export default function SearchBar({ onSearch, isLoading = false }: SearchBarProp
         <button
           onClick={handleSearch}
           disabled={isLoading || !query.trim()}
-          className="absolute right-4 top-1/2 -translate-y-1/2 p-3 rounded-xl bg-copper text-white hover:bg-copper/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
+          className="absolute right-2 sm:right-4 top-1/2 -translate-y-1/2 p-2 sm:p-3 rounded-xl bg-copper text-white hover:bg-copper/90 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-95"
           aria-label="Search"
         >
           {isLoading ? (
-            <Loader2 className="w-6 h-6 animate-spin" />
+            <Loader2 className="w-5 h-5 sm:w-6 sm:h-6 animate-spin" />
           ) : (
-            <Search className="w-6 h-6" />
+            <Search className="w-5 h-5 sm:w-6 sm:h-6" />
           )}
         </button>
       </div>
