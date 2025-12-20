@@ -12,16 +12,6 @@ const nextConfig = {
       },
     ],
   },
-  // Exclude Supabase Edge Functions from build
-  webpack: (config, { isServer }) => {
-    if (!isServer) {
-      config.resolve.alias = {
-        ...config.resolve.alias,
-        'supabase/functions': false,
-      };
-    }
-    return config;
-  },
 }
 
 module.exports = nextConfig
