@@ -1,7 +1,7 @@
 'use client';
 
 import { useState, useEffect } from 'react';
-import { DollarSign, ExternalLink, RefreshCw } from 'lucide-react';
+import { DollarSign, ExternalLink, RefreshCw, Loader2 } from 'lucide-react';
 
 interface Price {
   retailer: string;
