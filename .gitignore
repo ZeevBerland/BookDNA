@@ -1,0 +1,103 @@
+# Environment variables
+.env
+.env.local
+.env*.local
+
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Python
+venv/
+venv_gpu/
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+build/
+develop-eggs/
+dist/
+downloads/
+eggs/
+.eggs/
+parts/
+sdist/
+var/
+wheels/
+*.egg-info/
+.installed.cfg
+*.egg
+
+# Testing
+coverage/
+*.cover
+.hypothesis/
+.pytest_cache/
+
+# Next.js
+.next/
+out/
+build
+dist
+
+# Production
+*.log
+npm-debug.log*
+yarn-debug.log*
+yarn-error.log*
+
+# Misc
+.DS_Store
+*.pem
+.idea/
+.vscode/
+*.swp
+*.swo
+*~
+
+# Debug
+*.pid
+*.seed
+*.pid.lock
+
+# TypeScript
+*.tsbuildinfo
+next-env.d.ts
+
+# Turbo
+.turbo
+
+# Data files (large datasets)
+data/
+*.csv
+*.json
+data/*.csv
+data/*.json
+data/*.npy
+*.npy
+*.pkl
+*.pickle
+
+# Processed data
+books_clean.csv
+embeddings.npy
+faiss.index
+
+# Test scripts
+test_*.py
+test_*.js
+test_*.ts
+
+# Terminals folder (Cursor specific)
+.cursor/
+
+# Supabase
+.supabase/
+supabase/.branches/
+supabase/.temp/
+
+# Local env files
+*.local

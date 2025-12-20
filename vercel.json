@@ -1,0 +1,23 @@
+{
+  "buildCommand": "npm run build",
+  "outputDirectory": ".next",
+  "framework": "nextjs",
+  "rewrites": [
+    {
+      "source": "/api/:path*",
+      "destination": "/api/:path*"
+    }
+  ],
+  "headers": [
+    {
+      "source": "/api/:path*",
+      "headers": [
+        {
+          "key": "Cache-Control",
+          "value": "public, s-maxage=60, stale-while-revalidate=120"
+        }
+      ]
+    }
+  ]
+}
+

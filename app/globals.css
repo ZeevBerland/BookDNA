@@ -1,0 +1,94 @@
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;1,400&family=Inter:wght@300;400;500;600;700&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+:root {
+  --cream: #F5F1E8;
+  --brown-dark: #4A3426;
+  --brown-medium: #8B7355;
+  --copper: #C8936E;
+}
+
+@layer base {
+  * {
+    @apply border-brown-medium/20;
+  }
+  
+  body {
+    @apply bg-cream text-brown-dark font-sans antialiased;
+  }
+  
+  h1, h2, h3, h4, h5, h6 {
+    @apply font-serif;
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply bg-copper text-white px-6 py-3 rounded-lg font-medium transition-all hover:bg-copper/90 hover:shadow-md active:scale-95;
+  }
+  
+  .btn-secondary {
+    @apply bg-brown-medium/10 text-brown-dark px-6 py-3 rounded-lg font-medium transition-all hover:bg-brown-medium/20 active:scale-95;
+  }
+  
+  .card {
+    @apply bg-white rounded-xl shadow-card p-6 transition-all hover:shadow-lg;
+  }
+  
+  .input-field {
+    @apply w-full px-4 py-3 rounded-lg bg-white border-2 border-brown-medium/20 focus:border-copper focus:outline-none transition-colors;
+  }
+  
+  .badge {
+    @apply inline-block px-3 py-1 rounded-full text-sm font-medium bg-brown-medium/10 text-brown-medium;
+  }
+}
+
+@layer utilities {
+  .text-balance {
+    text-wrap: balance;
+  }
+}
+
+/* Custom scrollbar */
+::-webkit-scrollbar {
+  width: 10px;
+}
+
+::-webkit-scrollbar-track {
+  background: var(--cream);
+}
+
+::-webkit-scrollbar-thumb {
+  background: var(--brown-medium);
+  border-radius: 5px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: var(--brown-dark);
+}
+
+/* Loading animation */
+@keyframes shimmer {
+  0% {
+    background-position: -1000px 0;
+  }
+  100% {
+    background-position: 1000px 0;
+  }
+}
+
+.skeleton {
+  animation: shimmer 2s infinite;
+  background: linear-gradient(
+    to right,
+    #f0ebe3 4%,
+    #e8e1d5 25%,
+    #f0ebe3 36%
+  );
+  background-size: 1000px 100%;
+}
+
