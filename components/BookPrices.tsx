@@ -54,32 +54,28 @@ export default function BookPrices({ bookId, title, author, isbn }: BookPricesPr
 
   if (loading) {
     return (
-      <div className="border rounded-lg p-6 bg-gradient-to-br from-copper/5 to-brown-medium/5 shadow-sm">
-        <div className="flex items-center gap-3 mb-4">
-          <div className="relative">
-            <DollarSign className="w-6 h-6 text-copper animate-pulse" />
-            <div className="absolute inset-0 animate-ping">
-              <DollarSign className="w-6 h-6 text-copper opacity-20" />
-            </div>
-          </div>
-          <div>
-            <h3 className="text-lg font-bold text-brown-dark">Fetching Latest Prices</h3>
-            <p className="text-sm text-brown-medium">Searching across multiple retailers...</p>
-          </div>
+      <div className="relative p-4 sm:p-6 rounded-lg bg-gradient-to-br from-copper/10 to-brown-light/10 shadow-inner text-center">
+        <div className="absolute inset-0 flex items-center justify-center">
+          <span className="relative flex h-10 w-10">
+            <span className="animate-ping absolute inline-flex h-full w-full rounded-full bg-copper opacity-75"></span>
+            <DollarSign className="relative inline-flex rounded-full h-10 w-10 text-copper p-2" />
+          </span>
         </div>
+        <h3 className="text-lg sm:text-xl font-bold text-brown-dark mb-2 mt-16">Fetching Latest Prices</h3>
+        <p className="text-brown-medium text-xs sm:text-sm mb-4">Searching across multiple retailers...</p>
         
-        <div className="space-y-3">
+        <div className="space-y-3 mb-6">
           {[1, 2, 3].map((i) => (
-            <div key={i} className="flex justify-between items-center p-3 bg-white/50 rounded animate-pulse">
-              <div className="h-4 bg-brown-medium/20 rounded w-32"></div>
-              <div className="h-5 bg-copper/20 rounded w-16"></div>
+            <div key={i} className="flex justify-between items-center p-3 bg-white/50 rounded-lg animate-pulse">
+              <div className="h-4 bg-gray-200 rounded w-1/3"></div>
+              <div className="h-4 bg-gray-200 rounded w-1/6"></div>
             </div>
           ))}
         </div>
         
-        <div className="mt-4 flex items-center gap-2 text-xs text-brown-medium/60">
-          <RefreshCw className="w-3 h-3 animate-spin" />
-          <span>This may take a few moments...</span>
+        <div className="flex items-center justify-center text-xs text-brown-medium/70">
+          <Loader2 className="w-3 h-3 animate-spin mr-1" />
+          This may take a few moments...
         </div>
       </div>
     );
@@ -128,16 +124,16 @@ export default function BookPrices({ bookId, title, author, isbn }: BookPricesPr
   };
 
   return (
-    <div className="border rounded-lg p-6 bg-white shadow-sm">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-xl font-bold text-brown-dark flex items-center gap-2">
+    <div className="border rounded-lg p-4 sm:p-6 bg-white shadow-sm">
+      <div className="flex flex-col sm:flex-row sm:items-center justify-between mb-4 gap-2">
+        <h3 className="text-lg sm:text-xl font-bold text-brown-dark flex items-center gap-2">
           <DollarSign className="w-5 h-5 text-copper" />
           Price Comparison
         </h3>
         {data.cached && (
           <button
             onClick={fetchPrices}
-            className="text-xs text-brown-medium hover:text-copper flex items-center gap-1"
+            className="text-xs text-brown-medium hover:text-copper flex items-center gap-1 self-start sm:self-auto"
           >
             <RefreshCw className="w-3 h-3" />
             Refresh
@@ -171,12 +167,12 @@ export default function BookPrices({ bookId, title, author, isbn }: BookPricesPr
                         href={price.url}
                         target="_blank"
                         rel="noopener noreferrer"
-                        className="font-medium text-brown-dark hover:text-copper flex items-center gap-1 transition-colors"
+                        className="font-medium text-brown-dark hover:text-copper flex items-center gap-1 transition-colors text-sm sm:text-base truncate max-w-[60%] sm:max-w-none"
                       >
                         {price.retailer}
-                        <ExternalLink className="w-3 h-3" />
+                        <ExternalLink className="w-3 h-3 flex-shrink-0" />
                       </a>
-                      <span className="text-lg font-bold text-copper">
+                      <span className="text-base sm:text-lg font-bold text-copper whitespace-nowrap">
                         ${price.price.toFixed(2)}
                       </span>
                     </div>
