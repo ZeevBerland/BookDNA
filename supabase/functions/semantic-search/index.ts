@@ -16,6 +16,13 @@ interface SearchRequest {
   limit?: number;
   category_filter?: string;
   min_rating?: number;
+  // Phase 2: Advanced Filters
+  genres?: string[];  // Array of genre filters
+  min_year?: number;
+  max_year?: number;
+  min_pages?: number;
+  max_pages?: number;
+  reading_level?: string;  // beginner, intermediate, advanced
 }
 
 // Enhance query using Gemini to make it more suitable for semantic search
@@ -118,8 +125,18 @@ serve(async (req) => {
     const supabase = createClient(supabaseUrl, supabaseKey);
 
     // Parse request
-    const { query, limit = 20, category_filter, min_rating }: SearchRequest =
-      await req.json();
+    const { 
+      query, 
+      limit = 20, 
+      category_filter, 
+      min_rating,
+      genres,
+      min_year,
+      max_year,
+      min_pages,
+      max_pages,
+      reading_level
+    }: SearchRequest = await req.json();
 
     if (!query || query.trim().length === 0) {
       return new Response(
@@ -283,7 +300,14 @@ serve(async (req) => {
         query_embedding: embeddingStr,
         match_limit: limit,
         category_filter: category_filter || null,
-        min_rating: min_rating || 0
+        min_rating: min_rating || 0,
+        // Phase 2: Advanced Filters
+        genres_filter: genres || null,
+        min_year_filter: min_year || null,
+        max_year_filter: max_year || null,
+        min_pages_filter: min_pages || null,
+        max_pages_filter: max_pages || null,
+        reading_level_filter: reading_level || null
       }
     );
 

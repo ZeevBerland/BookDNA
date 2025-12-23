@@ -3,27 +3,57 @@
 import { useState } from 'react'
 import SearchBar from '@/components/SearchBar'
 import BookGrid from '@/components/BookGrid'
+import FilterSidebar, { FilterState } from '@/components/FilterSidebar'
 import { Book } from '@/lib/types'
-import { BookOpen } from 'lucide-react'
+import { BookOpen, SlidersHorizontal, X } from 'lucide-react'
 
 export default function Home() {
   const [books, setBooks] = useState<Book[]>([])
   const [isLoading, setIsLoading] = useState(false)
   const [hasSearched, setHasSearched] = useState(false)
   const [error, setError] = useState<string | null>(null)
+  const [currentQuery, setCurrentQuery] = useState('')
+  const [showMobileFilters, setShowMobileFilters] = useState(false)
+  
+  // Phase 2: Filter state
+  const [filters, setFilters] = useState<FilterState>({
+    genres: [],
+    minYear: null,
+    maxYear: null,
+    minPages: null,
+    maxPages: null,
+    readingLevel: null,
+    minRating: null
+  })
 
   const handleSearch = async (query: string) => {
     setIsLoading(true)
     setError(null)
     setHasSearched(true)
+    setCurrentQuery(query)
 
     try {
+      // Phase 2: Include filter parameters in search
+      const searchParams: any = { 
+        query, 
+        limit: 100,  // Increased limit for better filtering
+      }
+      
+      // Add filters only if they're set
+      if (filters.genres.length > 0) searchParams.genres = filters.genres
+      if (filters.minYear) searchParams.min_year = filters.minYear
+      if (filters.maxYear) searchParams.max_year = filters.maxYear
+      if (filters.minPages) searchParams.min_pages = filters.minPages
+      if (filters.maxPages) searchParams.max_pages = filters.maxPages
+      if (filters.readingLevel) searchParams.reading_level = filters.readingLevel
+      if (filters.minRating) searchParams.min_rating = filters.minRating
+      
       const response = await fetch('/api/search', {
         method: 'POST',
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ query, limit: 20 }),
+        body: JSON.stringify(searchParams),
       })
 
       if (!response.ok) {
@@ -38,6 +68,15 @@ export default function Home() {
       console.error('Search error:', err)
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  // Re-run search when filters change
+  const handleFiltersChange = (newFilters: FilterState) => {
+    setFilters(newFilters)
+    // If user has already searched, re-run the search with new filters
+    if (hasSearched && currentQuery) {
+      handleSearch(currentQuery)
     }
   }
 
@@ -85,32 +124,86 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Results Section */}
+      {/* Results Section with Filters */}
       {hasSearched && (
         <section className="py-12 px-4">
-          <div className="max-w-6xl mx-auto">
-            {error ? (
-              <div className="text-center py-12">
-                <div className="inline-block px-6 py-4 bg-red-50 text-red-700 rounded-lg border border-red-200">
-                  {error}
-                </div>
+          <div className="max-w-7xl mx-auto">
+            {/* Mobile Filter Button */}
+            {!error && (
+              <div className="lg:hidden mb-4 flex justify-end">
+                <button
+                  onClick={() => setShowMobileFilters(!showMobileFilters)}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-lg border-2 border-copper text-copper hover:bg-copper hover:text-white transition-colors font-medium"
+                >
+                  <SlidersHorizontal className="w-4 h-4" />
+                  Filters
+                  {(filters.genres.length > 0 || filters.minRating) && (
+                    <span className="bg-copper text-white px-2 py-0.5 rounded-full text-xs">
+                      {filters.genres.length + (filters.minRating ? 1 : 0)}
+                    </span>
+                  )}
+                </button>
               </div>
-            ) : (
-              <>
-                {!isLoading && books.length > 0 && (
-                  <div className="mb-8">
-                    <h2 className="font-serif text-3xl text-brown-dark mb-2">
-                      Search Results
-                    </h2>
-                    <p className="text-brown-medium">
-                      Found {books.length} book{books.length !== 1 ? 's' : ''} matching your query
-                    </p>
-                  </div>
-                )}
-                
-                <BookGrid books={books} isLoading={isLoading} />
-              </>
             )}
+
+            <div className="flex gap-6 relative">
+              {/* Desktop Sidebar */}
+              {!error && (
+                <aside className="hidden lg:block w-80 flex-shrink-0">
+                  <div className="sticky top-4">
+                    <FilterSidebar 
+                      filters={filters} 
+                      onFiltersChange={handleFiltersChange}
+                    />
+                  </div>
+                </aside>
+              )}
+
+              {/* Mobile Drawer */}
+              {showMobileFilters && !error && (
+                <div className="fixed inset-0 z-50 lg:hidden">
+                  {/* Backdrop */}
+                  <div 
+                    className="absolute inset-0 bg-black/50"
+                    onClick={() => setShowMobileFilters(false)}
+                  />
+                  {/* Drawer */}
+                  <div className="absolute inset-y-0 left-0 w-full max-w-sm bg-white shadow-xl">
+                    <FilterSidebar 
+                      filters={filters} 
+                      onFiltersChange={handleFiltersChange}
+                      onClose={() => setShowMobileFilters(false)}
+                    />
+                  </div>
+                </div>
+              )}
+
+              {/* Results Content */}
+              <div className="flex-1 min-w-0">
+                {error ? (
+                  <div className="text-center py-12">
+                    <div className="inline-block px-6 py-4 bg-red-50 text-red-700 rounded-lg border border-red-200">
+                      {error}
+                    </div>
+                  </div>
+                ) : (
+                  <>
+                    {!isLoading && books.length > 0 && (
+                      <div className="mb-8">
+                        <h2 className="font-serif text-3xl text-brown-dark mb-2">
+                          Search Results
+                        </h2>
+                        <p className="text-brown-medium">
+                          Found {books.length} book{books.length !== 1 ? 's' : ''} matching your query
+                        </p>
+                      </div>
+                    )}
+                    
+                    <BookGrid books={books} isLoading={isLoading} />
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         </section>
       )}

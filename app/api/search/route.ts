@@ -3,7 +3,19 @@ import { NextRequest, NextResponse } from 'next/server'
 export async function POST(request: NextRequest) {
   try {
     const body = await request.json()
-    const { query, limit = 20, category_filter, min_rating } = body
+    const { 
+      query, 
+      limit = 20, 
+      category_filter, 
+      min_rating,
+      // Phase 2: Advanced filters
+      genres,
+      min_year,
+      max_year,
+      min_pages,
+      max_pages,
+      reading_level
+    } = body
 
     if (!query || typeof query !== 'string' || query.trim().length === 0) {
       return NextResponse.json(
@@ -37,6 +49,13 @@ export async function POST(request: NextRequest) {
         limit,
         category_filter,
         min_rating,
+        // Phase 2: Advanced filters
+        genres,
+        min_year,
+        max_year,
+        min_pages,
+        max_pages,
+        reading_level
       }),
     })
 
