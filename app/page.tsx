@@ -106,11 +106,8 @@ export default function Home() {
           </div>
 
           {/* Tagline */}
-          <p className="text-xl md:text-2xl text-copper font-medium mb-2">
+          <p className="text-xl md:text-2xl text-copper font-medium mb-12 max-w-2xl mx-auto">
             Natural Language Book Search
-          </p>
-          <p className="text-lg text-brown-medium mb-12 max-w-2xl mx-auto">
-            Powered by AI
           </p>
 
           {/* Search Bar */}
@@ -209,14 +206,36 @@ export default function Home() {
       )}
 
       {/* Footer */}
-      <footer className="py-12 px-4 bg-cream mt-20">
-        <div className="max-w-6xl mx-auto text-center">
-          <p className="text-brown-medium text-sm">
-            <span className="font-serif italic">Book</span>DNA - ML 2 Unsupervised Learning (2025)
-          </p>
-          <p className="text-brown-medium/70 text-xs mt-2">
-            Group 4 • Dr. Gilli Shama • Reichman University
-          </p>
+      <footer className="py-12 px-4 bg-cream mt-20 border-t border-brown-medium/10">
+        <div className="max-w-6xl mx-auto">
+          <div className="flex flex-col md:flex-row items-center justify-between gap-6">
+            {/* Brand */}
+            <div className="flex items-center gap-3">
+              <BookOpen className="w-8 h-8 text-copper" />
+              <div className="text-left">
+                <p className="font-serif text-xl font-bold text-brown-dark">
+                  <span className="italic">Book</span>DNA
+                </p>
+                <p className="text-xs text-brown-medium">Natural Language Book Discovery</p>
+              </div>
+            </div>
+
+            {/* Links */}
+            <div className="flex flex-wrap items-center justify-center gap-6 text-sm text-brown-medium">
+              <a href="/submit" className="hover:text-copper transition-colors">
+                Submit Your Book
+              </a>
+              <span className="text-brown-medium/50">•</span>
+              <span className="text-brown-medium/70">© 2025 BookDNA</span>
+            </div>
+          </div>
+
+          {/* Subtext */}
+          <div className="mt-6 pt-6 border-t border-brown-medium/10 text-center">
+            <p className="text-xs text-brown-medium/60">
+              Semantic book search powered by advanced machine learning
+            </p>
+          </div>
         </div>
       </footer>
     </main>
