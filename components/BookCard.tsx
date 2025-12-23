@@ -2,7 +2,7 @@
 
 import { useState } from 'react'
 import Image from 'next/image'
-import { ExternalLink, Star, DollarSign, Sparkles, Loader2 } from 'lucide-react'
+import { ExternalLink, Star, DollarSign, Sparkles, Loader2, X } from 'lucide-react'
 import { Book } from '@/lib/types'
 import BookPrices from './BookPrices'
 
@@ -285,20 +285,42 @@ export default function BookCard({ book }: BookCardProps) {
             </div>
           )}
 
-          {/* Expanded Recommended Book */}
+          {/* Expanded Recommended Book - Mobile Modal / Desktop Inline */}
           {expandedRecBook && (
-            <div className="mt-6 pt-6 border-t border-brown-light/30 animate-in slide-in-from-top duration-300">
-              <div className="flex items-center justify-between mb-4">
-                <h5 className="font-serif text-base font-semibold text-brown-dark">Selected Book Details</h5>
-                <button
-                  onClick={() => setExpandedRecBook(null)}
-                  className="text-sm text-brown-medium hover:text-copper transition-colors"
-                >
-                  Close
-                </button>
+            <>
+              {/* Mobile: Full-screen modal overlay */}
+              <div className="fixed inset-0 z-50 bg-black/50 lg:hidden" onClick={() => setExpandedRecBook(null)}>
+                <div className="absolute inset-x-0 bottom-0 max-h-[85vh] bg-white rounded-t-2xl overflow-auto" onClick={(e) => e.stopPropagation()}>
+                  <div className="sticky top-0 bg-white border-b border-brown-light/30 p-4 flex items-center justify-between z-10">
+                    <h5 className="font-serif text-lg font-semibold text-brown-dark">Book Details</h5>
+                    <button
+                      onClick={() => setExpandedRecBook(null)}
+                      className="p-2 hover:bg-brown-light/10 rounded-lg transition-colors"
+                      aria-label="Close"
+                    >
+                      <X className="w-5 h-5 text-brown-medium" />
+                    </button>
+                  </div>
+                  <div className="p-4">
+                    <BookCard book={expandedRecBook} />
+                  </div>
+                </div>
               </div>
-              <BookCard book={expandedRecBook} />
-            </div>
+
+              {/* Desktop: Inline expansion */}
+              <div className="hidden lg:block mt-6 pt-6 border-t border-brown-light/30 animate-in slide-in-from-top duration-300">
+                <div className="flex items-center justify-between mb-4">
+                  <h5 className="font-serif text-base font-semibold text-brown-dark">Selected Book Details</h5>
+                  <button
+                    onClick={() => setExpandedRecBook(null)}
+                    className="text-sm text-brown-medium hover:text-copper transition-colors"
+                  >
+                    Close
+                  </button>
+                </div>
+                <BookCard book={expandedRecBook} />
+              </div>
+            </>
           )}
         </div>
       )}
