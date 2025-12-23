@@ -63,7 +63,7 @@ export default function BookCard({ book }: BookCardProps) {
   }
 
   return (
-    <div className="card group hover:scale-[1.02] transition-transform duration-300">
+    <div className="card group hover:scale-[1.02] transition-transform duration-300 overflow-hidden">
       <div className="flex flex-col sm:flex-row gap-4">
         {/* Book Cover */}
         <div className="flex-shrink-0 w-full sm:w-24 h-48 sm:h-36 relative bg-brown-medium/10 rounded-lg overflow-hidden mx-auto sm:mx-0 max-w-[160px] sm:max-w-none">
@@ -215,7 +215,7 @@ export default function BookCard({ book }: BookCardProps) {
               No similar books found
             </div>
           ) : (
-            <div className="overflow-x-auto -mx-2 px-2">
+            <div className="overflow-x-auto overflow-y-hidden">
               <div className="flex gap-4 pb-2">
                 {recommendations.map((recBook) => (
                   <div
