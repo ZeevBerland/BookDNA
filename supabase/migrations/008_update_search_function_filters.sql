@@ -1,7 +1,7 @@
 -- Update search function to support Phase 2 advanced filters
 -- Drop existing function and recreate with new parameters
 
-DROP FUNCTION IF EXISTS search_books_by_embedding(vector, int, text, float);
+DROP FUNCTION IF EXISTS search_books_by_embedding;
 
 CREATE OR REPLACE FUNCTION search_books_by_embedding(
   query_embedding vector(384),

@@ -15,11 +15,48 @@ interface RetailerPrice {
   retailer: string;
   price: number;
   type: string;
-  url?: string;
-  text?: string;
+  url: string;
 }
 
-// FIX 4: Updated list of known retailers (added missing ones)
+// Response Schema for Gemini - enforces structured JSON output
+const PRICE_SCHEMA = {
+  type: "OBJECT",
+  properties: {
+    retailers: {
+      type: "ARRAY",
+      items: {
+        type: "OBJECT",
+        properties: {
+          retailer: {
+            type: "STRING",
+            description: "Name of the store (e.g. Amazon, Barnes & Noble, ThriftBooks)"
+          },
+          price: {
+            type: "NUMBER",
+            description: "Price in USD"
+          },
+          type: {
+            type: "STRING",
+            enum: ["new", "used", "ebook"],
+            description: "Condition or format of the book"
+          },
+          url: {
+            type: "STRING",
+            description: "Direct link to the product page on the retailer's website"
+          }
+        },
+        required: ["retailer", "price", "type", "url"]
+      }
+    },
+    summary: {
+      type: "STRING",
+      description: "A brief summary of availability (e.g. 'Available new from $15.99')"
+    }
+  },
+  required: ["retailers"]
+};
+
+// Known retailers for validation
 const KNOWN_RETAILERS = [
   'amazon', 'barnesandnoble', 'barnes & noble', 'bookshop', 'abebooks',
   'thriftbooks', 'betterworldbooks', 'target', 'walmart',
@@ -32,124 +69,24 @@ function sleep(ms: number): Promise<void> {
   return new Promise(resolve => setTimeout(resolve, ms));
 }
 
-// FIX 1: Stronger prompt with more aggressive JSON-only instruction
-function buildStrongerPrompt(title: string, author: string, isbn?: string): string {
+// Build a clean, focused prompt (schema handles JSON structure)
+function buildPrompt(title: string, author: string, isbn?: string): string {
   const isbnPart = isbn ? ` (ISBN: ${isbn})` : '';
   
-  return `CRITICAL: You MUST respond with ONLY valid JSON. Do NOT include any explanatory text, reasoning, markdown formatting, or code blocks.
+  return `Find current retail prices for purchasing this book:
+Title: "${title}"
+Author: ${author}${isbnPart}
 
-Your response must START with { and END with }. Nothing before { and nothing after }.
+Search major online retailers like Amazon, Barnes & Noble, AbeBooks, Books-A-Million, Bookshop.org, Half Price Books, ThriftBooks, and Alibris.
 
-Task: Find where to buy the book "${title}" by ${author}${isbnPart} from online retailers.
-
-Response format (ONLY this JSON, no other text):
-{
-  "retailers": [
-    {"retailer": "Amazon", "url": "https://www.amazon.com/dp/XXXXX", "price": 24.99, "type": "new"},
-    {"retailer": "Barnes & Noble", "url": "https://www.barnesandnoble.com/w/XXXXX", "price": 19.99, "type": "used"}
-  ]
+Requirements:
+- Find actual current prices from real retailers
+- Include direct product URLs (not search pages or homepage)
+- Find prices for different conditions: new, used, and ebook formats
+- Use the retailer's full name (e.g. "Barnes & Noble", not "B&N")`;
 }
 
-Rules:
-- retailer: Full retailer name (Amazon, Barnes & Noble, ThriftBooks, etc.)
-- url: Direct link to THIS SPECIFIC BOOK on the retailer's website (not homepage)
-- price: Current price as a number (e.g., 24.99)
-- type: Must be "new", "used", or "ebook"
-
-RESPOND WITH ONLY THE JSON OBJECT. Start with { and end with }.`;
-}
-
-// FIX 3: Enhanced fallback parsing for bullet-point format
-function parseBulletPointFormat(text: string): RetailerPrice[] {
-  const prices: RetailerPrice[] = [];
-  const lines = text.split('\n');
-  
-  console.log('Attempting bullet-point parsing...');
-  
-  for (const line of lines) {
-    // Match patterns like: *   **Amazon (Kindle)**: $2.99 - URL: `https://...`
-    const bulletMatch = line.match(/\*+\s*\*?\*?([^:*]+)\*?\*?:\s*\$?(\d+\.?\d*)\s*(?:-\s*URL:\s*`?([^`\s]+)`?)?/i);
-    
-    if (bulletMatch) {
-      const retailer = bulletMatch[1].trim();
-      const price = parseFloat(bulletMatch[2]);
-      let url = bulletMatch[3]?.trim();
-      
-      // Extract type from retailer name
-      let type = 'new';
-      const retailerLower = retailer.toLowerCase();
-      if (retailerLower.includes('kindle') || retailerLower.includes('ebook') || 
-          retailerLower.includes('nook') || retailerLower.includes('kobo')) {
-        type = 'ebook';
-      } else if (retailerLower.includes('used') || retailerLower.includes('thrift')) {
-        type = 'used';
-      }
-      
-      // Clean up retailer name
-      let cleanRetailer = retailer.replace(/\(.*?\)/g, '').trim();
-      
-      if (price > 0 && price < 1000) {
-        prices.push({
-          retailer: cleanRetailer,
-          price,
-          type,
-          url,
-          text: line.trim()
-        });
-      }
-    }
-  }
-  
-  console.log(`Bullet-point parsing found ${prices.length} prices`);
-  return prices;
-}
-
-// Enhanced JSON extraction with multiple strategies
-function extractJSON(text: string): any {
-  // Strategy 1: JSON code block
-  let match = text.match(/```json\s*\n([\s\S]*?)\n```/);
-  if (match) {
-    try {
-      return JSON.parse(match[1]);
-    } catch (e) {
-      console.log('Code block JSON parse failed');
-    }
-  }
-  
-  // Strategy 2: Look for retailers array pattern
-  match = text.match(/\{[\s\S]*?"retailers"\s*:\s*\[[\s\S]*?\]\s*\}/);
-  if (match) {
-    try {
-      return JSON.parse(match[0]);
-    } catch (e) {
-      console.log('Regex match JSON parse failed');
-    }
-  }
-  
-  // Strategy 3: Direct parse if starts and ends with braces
-  if (text.trim().startsWith('{') && text.trim().endsWith('}')) {
-    try {
-      return JSON.parse(text.trim());
-    } catch (e) {
-      console.log('Direct JSON parse failed');
-    }
-  }
-  
-  // Strategy 4: Find first { and last } and try to parse that
-  const firstBrace = text.indexOf('{');
-  const lastBrace = text.lastIndexOf('}');
-  if (firstBrace !== -1 && lastBrace !== -1 && lastBrace > firstBrace) {
-    try {
-      return JSON.parse(text.substring(firstBrace, lastBrace + 1));
-    } catch (e) {
-      console.log('Brace extraction JSON parse failed');
-    }
-  }
-  
-  return null;
-}
-
-// FIX 2: Retry logic with exponential backoff
+// Fetch prices with retry logic and exponential backoff
 async function fetchPricesWithRetry(
   title: string, 
   author: string, 
@@ -158,11 +95,11 @@ async function fetchPricesWithRetry(
   retryCount: number = 0
 ): Promise<any> {
   const maxRetries = 2;
-  const query = buildStrongerPrompt(title, author, isbn);
+  const query = buildPrompt(title, author, isbn);
   
   try {
     const response = await fetch(
-      "https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent",
+      "https://generativelanguage.googleapis.com/v1beta/models/gemini-3-flash-preview:generateContent",
       {
         method: "POST",
         headers: {
@@ -171,7 +108,12 @@ async function fetchPricesWithRetry(
         },
         body: JSON.stringify({
           contents: [{ parts: [{ text: query }] }],
-          tools: [{ googleSearch: {} }]
+          tools: [{ googleSearch: {} }],
+          generationConfig: {
+            responseMimeType: "application/json",
+            responseSchema: PRICE_SCHEMA,
+            temperature: 0.1,
+          }
         }),
       }
     );
@@ -188,7 +130,7 @@ async function fetchPricesWithRetry(
         return fetchPricesWithRetry(title, author, isbn, geminiApiKey, retryCount + 1);
       }
       
-      throw new Error(`Gemini API error: ${response.statusText}`);
+      throw new Error(`Gemini API error: ${response.status} - ${response.statusText}`);
     }
 
     const data = await response.json();
@@ -242,6 +184,8 @@ serve(async (req) => {
       throw new Error("GEMINI_API_KEY not configured");
     }
 
+    console.log(`Fetching prices for: "${title}" by ${author}`);
+
     // Use retry logic
     const data = await fetchPricesWithRetry(title, author, isbn, GEMINI_API_KEY);
     
@@ -254,6 +198,7 @@ serve(async (req) => {
     }
     
     const responseText = data.candidates?.[0]?.content?.parts?.[0]?.text || "";
+    const groundingMetadata = data.candidates?.[0]?.groundingMetadata;
     
     if (!responseText || responseText.trim().length === 0) {
       console.error("Empty response from Gemini");
@@ -271,51 +216,69 @@ serve(async (req) => {
     console.log(`Response length: ${responseText.length} chars`);
     console.log(`Response preview: ${responseText.substring(0, 200)}...`);
     
-    // Try to extract JSON using enhanced strategies
-    let parsedData = extractJSON(responseText);
-    
-    const groundingMetadata = data.candidates?.[0]?.groundingMetadata;
-    let prices: RetailerPrice[] = [];
-    
-    if (parsedData?.retailers && Array.isArray(parsedData.retailers)) {
-      // Success! Got structured JSON
-      prices = parsedData.retailers
-        .filter((r: any) => r.price != null && r.price > 0 && r.price < 1000 && r.retailer && r.url)
-        .map((r: any) => ({
-          retailer: r.retailer,
-          price: r.price,
-          type: r.type || 'new',
-          url: r.url,
-          text: `${r.retailer}: $${r.price} - ${r.type}`
-        }));
-      
-      console.log(`✅ Extracted ${prices.length} prices from JSON`);
-    } else {
-      // FIX 3: Try bullet-point format parsing
-      console.log('⚠️ No valid JSON found, trying bullet-point parsing');
-      prices = parseBulletPointFormat(responseText);
-      
-      // If bullet-point parsing also failed, try old text parsing
-      if (prices.length === 0) {
-        console.log('⚠️ Bullet-point parsing failed, trying line-by-line text parsing');
-        prices = extractPricesFromText(responseText, groundingMetadata);
-      }
+    // With responseSchema, the response is guaranteed to be valid JSON
+    let parsedData;
+    try {
+      parsedData = JSON.parse(responseText);
+    } catch (parseError) {
+      console.error("Failed to parse JSON response (should not happen with schema):", parseError);
+      return new Response(
+        JSON.stringify({
+          summary: "Failed to parse price information.",
+          prices: [],
+          sources: groundingMetadata?.groundingChunks || [],
+          searchQueries: groundingMetadata?.webSearchQueries || []
+        }),
+        { headers: { ...corsHeaders, "Content-Type": "application/json" } }
+      );
     }
+    
+    // Validate and filter prices
+    const prices: RetailerPrice[] = (parsedData.retailers || [])
+      .filter((r: any) => {
+        // Basic validation
+        if (!r.retailer || !r.price || !r.url || !r.type) {
+          console.log(`⚠️  Filtered out invalid entry: ${JSON.stringify(r)}`);
+          return false;
+        }
+        
+        // Price validation
+        if (r.price <= 0 || r.price >= 1000) {
+          console.log(`⚠️  Filtered out price out of range: ${r.retailer} $${r.price}`);
+          return false;
+        }
+        
+        // URL validation
+        if (!r.url.startsWith('http')) {
+          console.log(`⚠️  Filtered out invalid URL: ${r.retailer} - ${r.url}`);
+          return false;
+        }
+        
+        // Check if retailer is known (log warning but don't filter)
+        const retailerLower = r.retailer.toLowerCase();
+        const isKnown = KNOWN_RETAILERS.some(kr => 
+          retailerLower.includes(kr) || kr.includes(retailerLower)
+        );
+        if (!isKnown) {
+          console.log(`⚠️  Unknown retailer (keeping anyway): ${r.retailer}`);
+        }
+        
+        return true;
+      })
+      .map((r: any) => ({
+        retailer: r.retailer,
+        price: r.price,
+        type: r.type,
+        url: r.url
+      }));
 
-    // Filter out retailers not in known list (optional quality check)
-    const validPrices = prices.filter(p => {
-      const retailerLower = p.retailer.toLowerCase();
-      const isKnown = KNOWN_RETAILERS.some(kr => retailerLower.includes(kr) || kr.includes(retailerLower));
-      if (!isKnown) {
-        console.log(`⚠️  Unknown retailer: ${p.retailer}`);
-      }
-      return true; // Still include unknown retailers, just log them
-    });
+    console.log(`✅ Returning ${prices.length} valid prices`);
+    console.log(`🔍 Grounding sources: ${groundingMetadata?.groundingChunks?.length || 0}`);
 
     return new Response(
       JSON.stringify({
-        summary: responseText,
-        prices: validPrices,
+        summary: parsedData.summary || `Found ${prices.length} prices from various retailers.`,
+        prices: prices,
         sources: groundingMetadata?.groundingChunks || [],
         searchQueries: groundingMetadata?.webSearchQueries || []
       }),
@@ -339,76 +302,3 @@ serve(async (req) => {
     );
   }
 });
-
-// Legacy text parsing function (kept as final fallback)
-function extractPricesFromText(text: string, metadata: any): RetailerPrice[] {
-  const prices: RetailerPrice[] = [];
-  const lines = text.split('\n');
-  
-  // Extract source URLs
-  const sources = metadata?.groundingChunks || [];
-  const sourceUrls = sources.map((chunk: any) => ({
-    url: chunk.web?.uri || '',
-    title: chunk.web?.title || ''
-  })).filter((s: any) => s.url);
-  
-  for (const line of lines) {
-    // Try JSON line parsing first
-    const trimmedLine = line.trim();
-    if (trimmedLine.startsWith('{') && trimmedLine.endsWith('}')) {
-      try {
-        const priceObj = JSON.parse(trimmedLine);
-        if (priceObj.retailer && priceObj.price && priceObj.url) {
-          const price = parseFloat(priceObj.price);
-          if (price > 0 && price < 1000) {
-            prices.push({
-              retailer: priceObj.retailer,
-              price,
-              type: priceObj.type || 'new',
-              url: priceObj.url,
-              text: trimmedLine
-            });
-            continue;
-          }
-        }
-      } catch (e) {
-        // Continue to regex matching
-      }
-    }
-    
-    // Regex pattern matching
-    const priceMatch = line.match(/([A-Za-z\s&.'\-]+?):\s*\$?(\d+\.?\d*)\s*-?\s*(new|used|ebook|kindle|hardcover|paperback|audiobook)?/i);
-    
-    if (priceMatch && priceMatch[2]) {
-      const retailer = priceMatch[1].trim();
-      const price = parseFloat(priceMatch[2]);
-      const type = priceMatch[3] ? priceMatch[3].toLowerCase() : 'new';
-      
-      if (price > 0 && price < 1000) {
-        // Try to find matching URL
-        let url = undefined;
-        const retailerLower = retailer.toLowerCase();
-        for (const source of sourceUrls) {
-          const urlLower = source.url.toLowerCase();
-          if (urlLower.includes(retailerLower) ||
-              (retailerLower.includes('amazon') && urlLower.includes('amazon')) ||
-              (retailerLower.includes('barnes') && urlLower.includes('barnesandnoble'))) {
-            url = source.url;
-            break;
-          }
-        }
-        
-        prices.push({
-          retailer,
-          price,
-          type: type === 'kindle' ? 'ebook' : type,
-          url: url || sourceUrls[0]?.url,
-          text: line.trim()
-        });
-      }
-    }
-  }
-  
-  console.log(`Text parsing found ${prices.length} prices`);
-  return prices;
-}
